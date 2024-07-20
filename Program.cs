@@ -114,7 +114,7 @@ namespace demo
             }
             Console.WriteLine("[INFO] Source excel file: \"" + excelFile + "\"");
 
-            string filePath = "training_data.jsonl";
+            string filePath = "training_data-" + excelFile.Trim().Replace(".\\", "").Replace(".", "_").Replace(" ", "_") + ".jsonl";
             string system_role = "system";
             string user_role = "user";
             string assistant_role = "assistant";

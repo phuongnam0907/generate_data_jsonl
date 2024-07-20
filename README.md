@@ -1,1 +1,1 @@
-dotnet publish -c Release -r win-x86 -o ./publish --self-contained
+dotnet publish -c Release -r win-x64 -o ./publish --self-contained
