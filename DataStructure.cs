@@ -23,8 +23,7 @@ namespace Tool_TrainingGPT.cs
         public string sentence_object { get; set; }
         public string sentence_subject { get; set; }
         public string sentence_verb { get; set; }
-        public string user_company { get; set; }
-        public string user_company_vietnamese { get; set; }
+        public string company_flag { get; set; }
         public string user_id { get; set; }
         public string user_name { get; set; }
         public string year { get; set; }
@@ -47,8 +46,7 @@ namespace Tool_TrainingGPT.cs
             this.sentence_object = String.Empty;
             this.sentence_subject = String.Empty;
             this.sentence_verb = String.Empty;
-            this.user_company = "boolean";
-            this.user_company_vietnamese = "boolean";
+            this.company_flag = "boolean";
             this.user_id = String.Empty;
             this.user_name = String.Empty;
             this.year = String.Empty;

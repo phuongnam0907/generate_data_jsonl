@@ -207,8 +207,7 @@ namespace demo
                                             dataStructure.name_street = contentCell; break;
                                         case TITLE.USER_COMPANY:
                                             if (String.IsNullOrEmpty(contentCell)) contentCell = "false";
-                                            dataStructure.user_company_vietnamese = contentCell;
-                                            dataStructure.user_company = contentCell; break;
+                                            dataStructure.company_flag = contentCell; break;
                                         case TITLE.ACTION_ENGLISH:
                                             dataStructure.action_en = contentCell; break;
                                         case TITLE.CATEGORY_MAIN:
@@ -237,8 +236,6 @@ namespace demo
                                 serializationString = Regex.Unescape(serializationString);
                                 serializationString = serializationString.Replace(gpt_content_role_assistant, tmpDataString);
                                 serializationString = serializationString.Replace("%THIS_IS_REPLACEMENT_01%", tmpSystemString);
-                                // Old source code
-                                serializationString = serializationString.Replace("user_company_vietnamese", "cơ_quan_doanh_nghiệp");
                                 writer.WriteLine(serializationString);
                             }
 
