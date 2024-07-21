@@ -12,6 +12,13 @@ namespace Tool_TrainingGPT.cs
         public string Title { get; set; }
         public int Indexing { get; set; }
         public int Flag { get; set; }
+
+        public Index()
+        {
+            Title = string.Empty;
+            Indexing = 0;
+            Flag = 0;
+        }
     }
     public class Mapper
     {

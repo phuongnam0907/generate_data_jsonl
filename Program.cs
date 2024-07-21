@@ -142,7 +142,7 @@ namespace demo
                         {
                             for (int col = 1; col <= colCount; col++)
                             {
-                                string tmpStr = worksheet.Cells[1, col]?.Text?.Trim();
+                                string? tmpStr = worksheet.Cells[1, col]?.Text?.Trim();
                                 int flag = -1;
                                 if (String.IsNullOrEmpty(tmpStr)) { continue; }
                                 bool isFound = false;
@@ -186,27 +186,28 @@ namespace demo
                                         case TITLE.CATEGORY:
                                             dataStructure.category = contentCell; break;
                                         case TITLE.USER_CODE:
-                                            dataStructure.user_code = contentCell; break;
+                                            dataStructure.user_id = contentCell; break;
                                         case TITLE.USER_PHONE:
-                                            dataStructure.user_phone = contentCell; break;
+                                            dataStructure.phone_number = contentCell; break;
                                         case TITLE.USER_NAME:
                                             dataStructure.user_name = contentCell; break;
                                         case TITLE.USER_ADDRESS:
-                                            dataStructure.user_address = contentCell; break;
+                                            dataStructure.address = contentCell; break;
                                         case TITLE.WATCH_CODE:
-                                            dataStructure.watch_code = contentCell; break;
+                                            dataStructure.device_id = contentCell; break;
                                         case TITLE.WATCH_INDEX:
-                                            dataStructure.watch_index = contentCell; break;
+                                            dataStructure.index_value = contentCell; break;
                                         case TITLE.MONTH:
                                             dataStructure.month = contentCell; break;
                                         case TITLE.YEAR:
                                             dataStructure.year = contentCell; break;
                                         case TITLE.ADDRESS_NUMBER:
-                                            dataStructure.user_address_number = contentCell; break;
+                                            dataStructure.number_address = contentCell; break;
                                         case TITLE.ADDRESS_STREET:
-                                            dataStructure.user_address_street = contentCell; break;
+                                            dataStructure.name_street = contentCell; break;
                                         case TITLE.USER_COMPANY:
                                             if (String.IsNullOrEmpty(contentCell)) contentCell = "false";
+                                            dataStructure.user_company_vietnamese = contentCell;
                                             dataStructure.user_company = contentCell; break;
                                         case TITLE.ACTION_ENGLISH:
                                             dataStructure.action_en = contentCell; break;
@@ -236,6 +237,8 @@ namespace demo
                                 serializationString = Regex.Unescape(serializationString);
                                 serializationString = serializationString.Replace(gpt_content_role_assistant, tmpDataString);
                                 serializationString = serializationString.Replace("%THIS_IS_REPLACEMENT_01%", tmpSystemString);
+                                // Old source code
+                                serializationString = serializationString.Replace("user_company_vietnamese", "cơ_quan_doanh_nghiệp");
                                 writer.WriteLine(serializationString);
                             }
 
