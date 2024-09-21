@@ -1,15 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Data;
-using System.Reflection.Metadata;
 using System.Text;
-using System.Collections.Generic;
 using OfficeOpenXml;
-using OfficeOpenXml.Style;
-using OfficeOpenXml.Utils;
-using System.ComponentModel.Design;
 using Tool_TrainingGPT.cs;
-using static System.Collections.Specialized.BitVector32;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -21,47 +14,39 @@ namespace demo
         {
             QUESTION = 0,
             ACTION,
-            CATEGORY,
-            USER_CODE,
-            USER_PHONE,
-            USER_NAME,
-            USER_ADDRESS,
-            WATCH_CODE,
-            WATCH_INDEX,
-            MONTH,
-            YEAR,
             ADDRESS_NUMBER,
             ADDRESS_STREET,
-            USER_COMPANY,
-            ACTION_ENGLISH,
-            CATEGORY_MAIN,
-            CATEGORY_SUB,
+            CATEGORY,
+            MONTH,
+            SENTENCE_OBJECT,
             SENTENCE_SUBJECT,
             SENTENCE_VERB,
-            SENTENCE_OBJECT
+            USER_ADDRESS,
+            USER_CODE,
+            USER_NAME,
+            USER_PHONE,
+            WATCH_CODE,
+            WATCH_INDEX,
+            YEAR
         }
 
         public static List<KeyValuePair<int, string>> listTitles = new List<KeyValuePair<int, string>>() {
-            new KeyValuePair<int, string>((int)TITLE.QUESTION, "CÂU HỎI KHÁCH HÀNG"),
             new KeyValuePair<int, string>((int)TITLE.ACTION, "HÀNH ĐỘNG"),
-            new KeyValuePair<int, string>((int)TITLE.CATEGORY, "PHÂN LOẠI"),
-            new KeyValuePair<int, string>((int)TITLE.USER_CODE, "MÃ KHÁCH HÀNG"),
-            new KeyValuePair<int, string>((int)TITLE.USER_PHONE, "SỐ ĐIỆN THOẠI"),
-            new KeyValuePair<int, string>((int)TITLE.USER_NAME, "TÊN KHÁCH HÀNG"),
-            new KeyValuePair<int, string>((int)TITLE.USER_ADDRESS, "ĐỊA CHỈ"),
-            new KeyValuePair<int, string>((int)TITLE.WATCH_CODE, "MÃ ĐỒNG HỒ"),
-            new KeyValuePair<int, string>((int)TITLE.WATCH_INDEX, "CHỈ SỐ NƯỚC"),
-            new KeyValuePair<int, string>((int)TITLE.MONTH, "THÁNG"),
-            new KeyValuePair<int, string>((int)TITLE.YEAR, "NĂM"),
             new KeyValuePair<int, string>((int)TITLE.ADDRESS_NUMBER, "SỐ NHÀ"),
             new KeyValuePair<int, string>((int)TITLE.ADDRESS_STREET, "TÊN ĐƯỜNG"),
-            new KeyValuePair<int, string>((int)TITLE.USER_COMPANY, "CƠ QUAN_DOANG NGHIỆP"),
-            new KeyValuePair<int, string>((int)TITLE.ACTION_ENGLISH, "English"),
-            new KeyValuePair<int, string>((int)TITLE.CATEGORY_MAIN, "Phân Loại 1"),
-            new KeyValuePair<int, string>((int)TITLE.CATEGORY_SUB, "Phân Loại 2"),
-            new KeyValuePair<int, string>((int)TITLE.SENTENCE_SUBJECT, "Chủ ngữ"),
-            new KeyValuePair<int, string>((int)TITLE.SENTENCE_VERB, "Động từ"),
-            new KeyValuePair<int, string>((int)TITLE.SENTENCE_OBJECT, "Bổ ngữ")
+            new KeyValuePair<int, string>((int)TITLE.CATEGORY, "PHÂN LOẠI"),
+            new KeyValuePair<int, string>((int)TITLE.MONTH, "THÁNG"),
+            new KeyValuePair<int, string>((int)TITLE.QUESTION, "CÂU HỎI KHÁCH HÀNG"),
+            new KeyValuePair<int, string>((int)TITLE.SENTENCE_OBJECT, "BỔ NGƯ"),
+            new KeyValuePair<int, string>((int)TITLE.SENTENCE_SUBJECT, "CHỦ NGỮ"),
+            new KeyValuePair<int, string>((int)TITLE.SENTENCE_VERB, "ĐỘNG TỪ"),
+            new KeyValuePair<int, string>((int)TITLE.USER_ADDRESS, "ĐỊA CHỈ"),
+            new KeyValuePair<int, string>((int)TITLE.USER_CODE, "MÃ KHÁCH HÀNG"),
+            new KeyValuePair<int, string>((int)TITLE.USER_NAME, "TÊN KHÁCH HÀNG"),
+            new KeyValuePair<int, string>((int)TITLE.USER_PHONE, "SỐ ĐIỆN THOẠI"),
+            new KeyValuePair<int, string>((int)TITLE.WATCH_CODE, "MÃ ĐỒNG HỒ"),
+            new KeyValuePair<int, string>((int)TITLE.WATCH_INDEX, "CHỈ SỐ NƯỚC"),
+            new KeyValuePair<int, string>((int)TITLE.YEAR, "NĂM")
         };
 
         private static void make_file_Click()
@@ -115,6 +100,7 @@ namespace demo
             Console.WriteLine("[INFO] Source excel file: \"" + excelFile + "\"");
 
             string filePath = "generated_training_data-" + excelFile.Trim().Replace(".\\", "").Replace(".", "_").Replace(" ", "_") + ".jsonl";
+            string fileCode = "generated_code-" + excelFile.Trim().Replace(".\\", "").Replace(".", "_").Replace(" ", "_") + ".json";
             string system_role = "system";
             string user_role = "user";
             string assistant_role = "assistant";
@@ -125,12 +111,45 @@ namespace demo
             {
                 File.Delete(filePath);
             }
+            if (File.Exists(fileCode))
+            {
+                File.Delete(fileCode);
+            }
             try
             {
                 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
                 using (ExcelPackage package = new ExcelPackage(excelFile))
                 {
-                    ExcelWorksheet? worksheet = package.Workbook.Worksheets.FirstOrDefault();
+                    List<ActionData> actionArray = new List<ActionData>();
+                    ExcelWorksheet? worksheetAction = package.Workbook.Worksheets["Type"];
+                    if (worksheetAction != null)
+                    {
+                        int rowCount = worksheetAction.Dimension?.Rows ?? 0;
+                        int colCount = worksheetAction.Dimension?.Columns ?? 0;
+                        for (int i = 2; i <= colCount; i++)
+                        {
+                            string contentCell = worksheetAction.Cells[1, i].Text.Trim();
+                            ActionData actionData = new ActionData(contentCell, i - 1);
+                            for (int j = 2; j <= rowCount; j++)
+                            {
+                                contentCell = worksheetAction.Cells[j, i].Text.Trim();
+                                if (String.IsNullOrEmpty(contentCell) || String.IsNullOrWhiteSpace(contentCell))
+                                {
+                                    break;
+                                }
+                                TypeData typeData = new TypeData(contentCell, j - 1);
+                                typeData.set_action_index(actionData.get_action_index() + typeData.get_action_index());
+                                actionData.list_type.Add(typeData);
+                            }
+                            actionArray.Add(actionData);
+                        }
+                    }
+                    using (StreamWriter writer = new StreamWriter(fileCode, true, new UTF8Encoding(true)))
+                    {
+                        writer.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(actionArray));
+                    }
+
+                    ExcelWorksheet? worksheet = package.Workbook.Worksheets["Data"];
                     if (worksheet != null)
                     {
                         Mapper mapTitle = new Mapper();
@@ -173,18 +192,47 @@ namespace demo
                                 roleAssistant.content = gpt_content_role_assistant;
                                 roleSystem.content = gpt_content_role_system;
 
+                                bool isRowEmpty = false;
+                                ActionData actionData = new ActionData();
                                 for (int i = 0; i < colArray.Count; i++)
                                 {
+                                    if (isRowEmpty) break;
                                     string contentCell = worksheet.Cells[row, colArray.ElementAt(i)].Text.Trim();
                                     if (String.IsNullOrEmpty(contentCell)) { contentCell = String.Empty; }
                                     switch ((TITLE)flagArray.ElementAt(i))
                                     {
                                         case TITLE.QUESTION:
-                                            roleUser.content = contentCell; break;
+                                            if (String.IsNullOrEmpty(contentCell))
+                                            {
+                                                isRowEmpty = true;
+                                            }
+                                            else
+                                            {
+                                                roleUser.content = contentCell;
+                                            }
+                                            break;
                                         case TITLE.ACTION:
-                                            dataStructure.action = contentCell; break;
+                                            if (String.IsNullOrEmpty(contentCell))
+                                            {
+                                                dataStructure.action = contentCell;
+                                            }
+                                            else
+                                            {
+                                                actionData = actionArray.Find(e => e.action_string == contentCell);
+                                                dataStructure.action = actionData.action_index;
+                                            }
+                                            break;
                                         case TITLE.CATEGORY:
-                                            dataStructure.category = contentCell; break;
+                                            if (String.IsNullOrEmpty(contentCell))
+                                            {
+                                                dataStructure.action = contentCell;
+                                            }
+                                            else
+                                            {
+                                                TypeData typeData = actionData.list_type.Find(e => e.type_string == contentCell);
+                                                dataStructure.category = typeData.type_index;
+                                            }
+                                            break;
                                         case TITLE.USER_CODE:
                                             dataStructure.user_id = contentCell; break;
                                         case TITLE.USER_PHONE:
@@ -194,9 +242,9 @@ namespace demo
                                         case TITLE.USER_ADDRESS:
                                             dataStructure.address = contentCell; break;
                                         case TITLE.WATCH_CODE:
-                                            dataStructure.device_id = contentCell; break;
+                                            dataStructure.watch_id = contentCell; break;
                                         case TITLE.WATCH_INDEX:
-                                            dataStructure.index_value = contentCell; break;
+                                            dataStructure.watch_index_value = contentCell; break;
                                         case TITLE.MONTH:
                                             dataStructure.month = contentCell; break;
                                         case TITLE.YEAR:
@@ -205,15 +253,6 @@ namespace demo
                                             dataStructure.number_address = contentCell; break;
                                         case TITLE.ADDRESS_STREET:
                                             dataStructure.name_street = contentCell; break;
-                                        case TITLE.USER_COMPANY:
-                                            if (String.IsNullOrEmpty(contentCell)) contentCell = "false";
-                                            dataStructure.company_flag = contentCell; break;
-                                        case TITLE.ACTION_ENGLISH:
-                                            dataStructure.action_en = contentCell; break;
-                                        case TITLE.CATEGORY_MAIN:
-                                            dataStructure.category_main = contentCell; break;
-                                        case TITLE.CATEGORY_SUB:
-                                            dataStructure.category_sub = contentCell; break;
                                         case TITLE.SENTENCE_SUBJECT:
                                             dataStructure.sentence_subject = contentCell; break;
                                         case TITLE.SENTENCE_VERB:
@@ -236,7 +275,10 @@ namespace demo
                                 serializationString = Regex.Unescape(serializationString);
                                 serializationString = serializationString.Replace(gpt_content_role_assistant, tmpDataString);
                                 serializationString = serializationString.Replace("%THIS_IS_REPLACEMENT_01%", tmpSystemString);
-                                writer.WriteLine(serializationString);
+                                if (!isRowEmpty)
+                                {
+                                    writer.WriteLine(serializationString);
+                                }
                             }
 
                         }
