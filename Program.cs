@@ -3,7 +3,7 @@ using System.Data;
 using System.Text;
 using OfficeOpenXml;
 using Tool_TrainingGPT.cs;
-using System.Text.Json;
+using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 
 namespace demo
@@ -51,7 +51,7 @@ namespace demo
 
         private static void make_file_Click()
         {
-            string configFile = "name.cfg";
+            string configFile = "config/name.cfg";
             string botName = "Chatbot";
             try
             {
@@ -77,8 +77,7 @@ namespace demo
             try
             {
                 string[] excelFiles = Directory.GetFiles(".", "*.*", SearchOption.AllDirectories)
-                                        .Where(file => file.EndsWith(".xls", StringComparison.OrdinalIgnoreCase) ||
-                                                       file.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+                                        .Where(file => file.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
                                         .ToArray();
                 foreach (string file in excelFiles)
                 {
@@ -111,6 +110,8 @@ namespace demo
             {
                 File.Delete(filePath);
             }
+
+            fileCode = "config/" + fileCode;
             if (File.Exists(fileCode))
             {
                 File.Delete(fileCode);
@@ -146,7 +147,7 @@ namespace demo
                     }
                     using (StreamWriter writer = new StreamWriter(fileCode, true, new UTF8Encoding(true)))
                     {
-                        writer.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(actionArray));
+                        writer.WriteLine(JsonConvert.SerializeObject(actionArray));
                     }
 
                     ExcelWorksheet? worksheet = package.Workbook.Worksheets["Data"];
@@ -182,7 +183,7 @@ namespace demo
                                 MessageModel roleUser = new MessageModel();
 
                                 DataStructure dataStructure = new DataStructure();
-                                string tmpSystemString = Regex.Unescape(JsonSerializer.Serialize(dataStructure));
+                                string tmpSystemString = Regex.Unescape(JsonConvert.SerializeObject(dataStructure));
                                 tmpSystemString = tmpSystemString.Replace("\"", "\\\"");
 
                                 roleAssistant.role = assistant_role;
@@ -214,6 +215,7 @@ namespace demo
                                         case TITLE.ACTION:
                                             if (String.IsNullOrEmpty(contentCell))
                                             {
+                                                isRowEmpty = true;
                                                 dataStructure.action = contentCell;
                                             }
                                             else
@@ -225,6 +227,7 @@ namespace demo
                                         case TITLE.CATEGORY:
                                             if (String.IsNullOrEmpty(contentCell))
                                             {
+                                                isRowEmpty = true;
                                                 dataStructure.action = contentCell;
                                             }
                                             else
@@ -262,7 +265,7 @@ namespace demo
                                     }
                                 }
 
-                                string tmpDataString = Regex.Unescape(JsonSerializer.Serialize(dataStructure));
+                                string tmpDataString = Regex.Unescape(JsonConvert.SerializeObject(dataStructure));
                                 tmpDataString = tmpDataString.Replace("\"", "\\\"");
 
 
@@ -271,7 +274,7 @@ namespace demo
                                 listMessages.messages.Add(roleUser);
                                 listMessages.messages.Add(roleAssistant);
 
-                                string serializationString = JsonSerializer.Serialize(listMessages);
+                                string serializationString = JsonConvert.SerializeObject(listMessages);
                                 serializationString = Regex.Unescape(serializationString);
                                 serializationString = serializationString.Replace(gpt_content_role_assistant, tmpDataString);
                                 serializationString = serializationString.Replace("%THIS_IS_REPLACEMENT_01%", tmpSystemString);
