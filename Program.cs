@@ -145,7 +145,7 @@ namespace demo
                             actionArray.Add(actionData);
                         }
                     }
-                    using (StreamWriter writer = new StreamWriter(fileCode, true, new UTF8Encoding(true)))
+                    using (StreamWriter writer = new StreamWriter(fileCode, true, new UTF8Encoding(false)))
                     {
                         writer.WriteLine(JsonConvert.SerializeObject(actionArray));
                     }
@@ -158,7 +158,7 @@ namespace demo
                         int colCount = worksheet.Dimension?.Columns ?? 0;
                         Console.WriteLine("[INFO] Number of records: " + rowCount);
 
-                        using (StreamWriter writer = new StreamWriter(filePath, true, new UTF8Encoding(true)))
+                        using (StreamWriter writer = new StreamWriter(filePath, true, new UTF8Encoding(false)))
                         {
                             for (int col = 1; col <= colCount; col++)
                             {
